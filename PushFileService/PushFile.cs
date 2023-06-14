@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PushFileService.Extensions;
+using System;
 using System.Globalization;
 using System.IO;
 using System.ServiceProcess;
@@ -11,7 +12,6 @@ namespace PushFileService
         public PushFile()
         {
             InitializeComponent();
-            this.ServiceName = "Minhlong-PushFileService";
         }
 
         protected override void OnStart(string[] args)
@@ -79,6 +79,7 @@ namespace PushFileService
         {
             WriteLog("Service has been stopped.");
         }
+
 
         public void WriteLog(string logMessage, bool addTimeStamp = true)
         {
