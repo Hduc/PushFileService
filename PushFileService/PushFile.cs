@@ -8,8 +8,6 @@ namespace PushFileService
 {
     public partial class PushFile : ServiceBase
     {
-        Timer Timer = new Timer();
-        int Interval = 10000;
         public PushFile()
         {
             InitializeComponent();
@@ -19,26 +17,66 @@ namespace PushFileService
         protected override void OnStart(string[] args)
         {
             WriteLog("Service has been started");
-            Timer.Elapsed += new ElapsedEventHandler(OnElapsedTime);
-            Timer.Interval = Interval;// cấu hình thời gian chạy
-            Timer.Enabled = true;
+            string pathWatcher = System.Configuration.ConfigurationManager.AppSettings["PathWatcher"];
+
+            var watcher = new FileSystemWatcher(pathWatcher);
+
+            watcher.NotifyFilter = NotifyFilters.Attributes
+                                 | NotifyFilters.CreationTime
+                                 | NotifyFilters.DirectoryName
+                                 | NotifyFilters.FileName
+                                 | NotifyFilters.LastAccess
+                                 | NotifyFilters.LastWrite
+                                 | NotifyFilters.Security
+                                 | NotifyFilters.Size;
+
+            watcher.Changed += OnChanged;
+            watcher.Created += OnCreated;
+            watcher.Deleted += OnDeleted;
+            watcher.Renamed += OnRenamed;
+            watcher.Error += OnError;
+
+            watcher.Filter = "*.txt|*.jpg";
+            watcher.IncludeSubdirectories = true;
+            watcher.EnableRaisingEvents = true;
         }
+
+        private void OnChanged(object sender, FileSystemEventArgs e)
+        {
+            if (e.ChangeType != WatcherChangeTypes.Changed)
+            {
+                return;
+            }
+            WriteLog($"Changed: {e.FullPath}");
+        }
+
+        private void OnCreated(object sender, FileSystemEventArgs e)
+        {
+            string value = $"Created: {e.FullPath}";
+            WriteLog(value);
+        }
+
+        private void OnDeleted(object sender, FileSystemEventArgs e) =>
+            WriteLog($"Deleted: {e.FullPath}");
+
+        private void OnRenamed(object sender, RenamedEventArgs e)
+        {
+            WriteLog(string.Format("Renamed file: '{0}' to '{1}'", e.OldFullPath, e.FullPath));
+        }
+
+        public void OnError(object sender, ErrorEventArgs e)
+        {
+            WriteLog(String.Format("Message {0} ms elapsed.", e.GetException()));
+        }
+
 
         private void OnElapsedTime(object source, ElapsedEventArgs e)
         {
-            // 1 tiếng chạy 1 lần
-            // kiểm tra đúng giờ được chạy thì mới run
-            int hour = int.Parse( System.Configuration.ConfigurationManager.AppSettings["HourRun"] ?? "18");
-            if(DateTime.Now.Hour == hour)
-            {
-
-            }
-            WriteLog(String.Format("{0} ms elapsed.", Interval));
+            WriteLog(String.Format("{0} ms elapsed.", 1));
         }
 
         protected override void OnStop()
         {
-            Timer.Stop();
             WriteLog("Service has been stopped.");
         }
 
