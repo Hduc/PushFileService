@@ -1,30 +1,59 @@
-﻿using PushFileService.Extensions;
+﻿using PushFileService.MinIO;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
+using System.Configuration;
+using System.Collections.Generic;
+using PushFileService.Models;
+using System.Data.SqlClient;
 
 namespace PushFileService
 {
     partial class ScanFilePushServer : ServiceBase
     {
+        private Client client;
+        private SqlConnection sqlConnection;
+        private List<ProductModel> productModels = new List<ProductModel>();
         public ScanFilePushServer()
         {
             InitializeComponent();
+            client = new Client();
+            string connectionString = ConfigurationManager.AppSettings["ConnectDB"];
+            sqlConnection = new SqlConnection(connectionString);
+            sqlConnection.Open();
+
+            string query = "SELECT Id, Name FROM YourTable";
+            SqlCommand command = new SqlCommand(query, sqlConnection);
+            SqlDataReader reader = command.ExecuteReader();
+
+
+            while (reader.Read())
+            {
+                ProductModel model = new ProductModel();
+                model.Id = reader.GetString(0);
+                model.Name = reader.GetString(1);
+                model.Bo = reader.GetString(2);
+                model.HoaVan = reader.GetString(3);
+                model.ThuongHieu = reader.GetString(4);
+                productModels.Add(model);
+            }
+            sqlConnection.Close();
+            sqlConnection.Dispose();
+
         }
 
         protected override void OnStart(string[] args)
         {
-            string pathWatcher = System.Configuration.ConfigurationManager.AppSettings["PathWatcher"];
-            WriteLog("start ScanFilePushServer");
-            ProcessFiles(pathWatcher);
+            bool runScanService = ConfigurationManager.AppSettings["runScanService"] =="true";
+            if (runScanService)
+            {
+                string pathWatcher = ConfigurationManager.AppSettings["PathWatcher"];
+                WriteLog("start ScanFilePushServer");
+                ProcessFiles(pathWatcher);
+            }
+            else
+            WriteLog("Not run ScanFilePushServer => app.config key 'runScanService'=true");
         }
 
 
@@ -36,6 +65,7 @@ namespace PushFileService
             foreach (string file in files)
             {
                 WriteLog(file);
+                client.UploadFile(file);
             }
 
             string[] subDirectories = Directory.GetDirectories(directory);

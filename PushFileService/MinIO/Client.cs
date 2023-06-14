@@ -1,9 +1,5 @@
 ﻿using Minio;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Configuration;
 
 namespace PushFileService.MinIO
 {
@@ -18,7 +14,22 @@ namespace PushFileService.MinIO
                 .WithSSL(ssl)
                 .Build();
         }
-        public void UploadFile()
+
+        public Client()
+        {
+            string server = ConfigurationManager.AppSettings["server"];
+            int port = int.Parse(ConfigurationManager.AppSettings["port"]);
+            string accessKey = ConfigurationManager.AppSettings["accessKey"];
+            string secretKey = ConfigurationManager.AppSettings["secretKey"];
+            bool ssl = ConfigurationManager.AppSettings["ssl"] == "true";
+
+            minioClient = new MinioClient()
+               .WithEndpoint(server, port)
+               .WithCredentials(accessKey, secretKey)
+               .WithSSL(ssl)
+               .Build();
+        }
+        public void UploadFile(string path)
         {
 
         }

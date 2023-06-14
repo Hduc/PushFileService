@@ -16,6 +16,14 @@ namespace PushFileService
 
         protected override void OnStart(string[] args)
         {
+            bool runScanService = System.Configuration.ConfigurationManager.AppSettings["runScanService"] == "true";
+            if (!runScanService)
+            {
+               
+                WriteLog("Not run PushFile => app.config key 'runScanService' =false");
+                return;
+            }
+               
             WriteLog("Service has been started");
             string pathWatcher = System.Configuration.ConfigurationManager.AppSettings["PathWatcher"];
 

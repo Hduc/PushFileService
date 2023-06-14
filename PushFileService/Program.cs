@@ -17,7 +17,8 @@ namespace PushFileService
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]
             {
-                new ScanFilePushServer()
+                new ScanFilePushServer(),
+                new PushFile()
             };
             ServiceBase.Run(ServicesToRun);
         }
