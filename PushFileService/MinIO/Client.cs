@@ -1,11 +1,19 @@
 ﻿using Minio;
+using PushFileService.Extensions;
+using PushFileService.Models;
+using System;
+using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
+using System.Threading.Tasks;
+using System.Windows.Forms.VisualStyles;
 
 namespace PushFileService.MinIO
 {
     public class Client
     {
         private MinioClient minioClient;
+        private string bucketName = "san-pham";
         public Client(string server, int port, string accessKey, string secretKey, bool ssl)
         {
             minioClient = new MinioClient()
@@ -29,9 +37,24 @@ namespace PushFileService.MinIO
                .WithSSL(ssl)
                .Build();
         }
-        public void UploadFile(string path)
+        public async Task UploadFile(string path, ProductModel product)
         {
+            string savePath = StringExtension
+                .GenerateFilePath(product.ThuongHieu, product.Bo, product.HoaVan, product.Name, product.Id, "image", product.Id);
+            bool found = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucketName));
+            if (!found)
+            {
+                await minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucketName));
+            }
 
+            FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            var args = new PutObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(savePath)
+                .WithStreamData(fileStream)
+                .WithObjectSize(fileStream.Length)
+                .WithContentType("application/octet-stream");
+            var result = await minioClient.PutObjectAsync(args);
         }
     }
 }

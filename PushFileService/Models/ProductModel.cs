@@ -13,5 +13,7 @@ namespace PushFileService.Models
         public string HoaVan { get; set; }
         public string Bo { get; set; }
         public string ThuongHieu { get; set; }
+
+        public string FileName { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -40,6 +41,17 @@ namespace PushFileService.Extensions
 
             // return
             return str;
-        } 
+        }
+
+        public static string GenerateFilePath(string thuonghieu, string bo, string hoavan, string sanpham, string id, string folderType, string fileName)
+        {
+            thuonghieu = String.IsNullOrEmpty(thuonghieu) ? "thuong-hieu" : thuonghieu.ToSlug();
+            bo = String.IsNullOrEmpty(bo) ? "bo" : bo.ToSlug();
+            hoavan = String.IsNullOrEmpty(hoavan) ? "hoa-van" : hoavan.ToSlug();
+            sanpham = String.IsNullOrEmpty(sanpham) ? "san-pham" : sanpham.ToSlug();
+            fileName = String.IsNullOrEmpty(fileName) ? "no-name" : Path.GetFileNameWithoutExtension(fileName).ToSlug() + Path.GetExtension(fileName);
+
+            return $"{thuonghieu}/{bo}/{hoavan}/{id}/{folderType}/{sanpham}_{fileName}";
+        }
     }
 }
