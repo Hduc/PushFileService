@@ -1,5 +1,7 @@
-﻿using System;
+﻿using PushFileService.Extensions;
+using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
@@ -15,11 +17,16 @@ namespace PushFileService
         static void Main()
         {
             ServiceBase[] ServicesToRun;
-            ServicesToRun = new ServiceBase[]
+            bool runScanService = ConfigurationManager.AppSettings["runScanService"] == "true";
+            if (runScanService)
             {
-                new ScanFilePushServer(),
-                new PushFile()
-            };
+                ServicesToRun =new ServiceBase[]{ new ScanFilePushServer() };
+                Helper.WriteLog("Not run PushFile => app.config key 'runScanService' =false");
+            }
+            else {
+                ServicesToRun = new ServiceBase[]{ new ScanFilePushServer() };
+                Helper.WriteLog("Not run ScanFilePushServer => app.config key 'runScanService' =true");
+            }
             ServiceBase.Run(ServicesToRun);
         }
     }

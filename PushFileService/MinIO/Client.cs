@@ -14,7 +14,7 @@ namespace PushFileService.MinIO
     {
         private MinioClient minioClient;
         private string bucketName = "san-pham";
-        public Client(string server, int port, string accessKey, string secretKey, bool ssl)
+        public void Inital(string server, int port, string accessKey, string secretKey, bool ssl)
         {
             minioClient = new MinioClient()
                 .WithEndpoint(server, port)
@@ -23,7 +23,7 @@ namespace PushFileService.MinIO
                 .Build();
         }
 
-        public Client()
+        public void Inital()
         {
             string server = ConfigurationManager.AppSettings["server"];
             int port = int.Parse(ConfigurationManager.AppSettings["port"]);
@@ -40,11 +40,13 @@ namespace PushFileService.MinIO
         public async Task UploadFile(string path, ProductModel product)
         {
             string savePath = StringExtension
-                .GenerateFilePath(product.ThuongHieu, product.Bo, product.HoaVan, product.Name, product.Id, "image", product.Id);
+                .GenerateFilePath(product.ThuongHieu, product.Bo, product.HoaVan, product.Name, product.Id, "image", product.FileName);
+            Helper.WriteLog(savePath);
             bool found = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucketName));
             if (!found)
             {
                 await minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucketName));
+                Helper.WriteLog("Create bucketName:san-pham");
             }
 
             FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
@@ -55,6 +57,7 @@ namespace PushFileService.MinIO
                 .WithObjectSize(fileStream.Length)
                 .WithContentType("application/octet-stream");
             var result = await minioClient.PutObjectAsync(args);
+            Helper.WriteLog($"success url new:{result.ObjectName}");
         }
     }
 }
